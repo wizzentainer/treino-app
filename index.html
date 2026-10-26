@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Treino">
+<title>Treino — Upper/Lower</title>
+<style>
+:root{--bg:#0f1115;--card:#1a1d24;--card2:#22262f;--txt:#e8eaf0;--mut:#8b93a5;--acc:#4f8cff;--ok:#2ecc71;--warn:#f39c12;--bad:#e74c3c;--line:#2c313c}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;padding-bottom:80px}
+header{position:sticky;top:0;background:var(--bg);padding:14px 16px 10px;border-bottom:1px solid var(--line);z-index:10}
+header h1{font-size:20px;font-weight:700}
+header p{font-size:12px;color:var(--mut);margin-top:2px}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:10;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:none;color:var(--mut);font-size:11px;padding:10px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+nav button .ic{font-size:20px}
+nav button.active{color:var(--acc)}
+main{padding:16px;max-width:640px;margin:0 auto}
+.card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:14px}
+.card h2{font-size:16px;margin-bottom:10px}
+.card h3{font-size:14px;margin:12px 0 8px;color:var(--mut)}
+.muted{color:var(--mut);font-size:13px}
+.daybtn{display:flex;justify-content:space-between;align-items:center;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;width:100%;color:var(--txt);text-align:left}
+.daybtn .t{font-weight:600;font-size:15px}
+.daybtn .s{font-size:12px;color:var(--mut);margin-top:2px}
+.daybtn .badge{font-size:11px;padding:3px 10px;border-radius:99px;background:var(--card);border:1px solid var(--line);color:var(--mut)}
+.daybtn .badge.done{background:rgba(46,204,113,.15);border-color:rgba(46,204,113,.4);color:var(--ok)}
+.exrow{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.exrow .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.exrow .nm{font-weight:600;font-size:14px}
+.exrow .sr{font-size:12px;color:var(--mut);margin-top:2px}
+.exrow .obs{font-size:12px;color:var(--mut);margin-top:4px;font-style:italic}
+.exrow .chk{font-size:22px;cursor:pointer;user-select:none;line-height:1}
+.sets{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.set{flex:1;min-width:80px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px}
+.set label{font-size:10px;color:var(--mut);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.set input{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px;font-size:15px}
+.btn{display:inline-block;background:var(--acc);color:#fff;border:none;border-radius:12px;padding:13px 20px;font-size:15px;font-weight:600;cursor:pointer;width:100%}
+.btn.sec{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid var(--bad)}
+.btnrow{display:flex;gap:10px;margin-top:12px}
+.btnrow .btn{flex:1}
+.stat{display:flex;gap:10px;margin-bottom:14px}
+.stat .st{flex:1;background:var(--card);border-radius:14px;padding:14px;text-align:center}
+.stat .st .v{font-size:24px;font-weight:700;color:var(--acc)}
+.stat .st .l{font-size:11px;color:var(--mut);margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--mut);font-weight:600;text-align:left;padding:6px 4px;border-bottom:1px solid var(--line);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+td{padding:8px 4px;border-bottom:1px solid var(--line)}
+select,input[type=date],textarea{background:var(--card2);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:10px;font-size:15px;width:100%}
+textarea{resize:vertical;font-family:inherit}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--ok);color:#fff;padding:10px 18px;border-radius:99px;font-size:13px;font-weight:600;z-index:20;animation:fade 2.5s forwards}
+@keyframes fade{0%{opacity:0;transform:translateX(-50%) translateY(8px)}10%,80%{opacity:1;transform:translateX(-50%)}100%{opacity:0}}
+.empty{text-align:center;color:var(--mut);padding:30px 10px;font-size:14px}
+.chart{margin-top:10px}
+.chart .bar{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.chart .bar .lbl{width:110px;font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chart .bar .track{flex:1;background:var(--card2);border-radius:6px;height:18px;overflow:hidden}
+.chart .bar .fill{height:100%;background:var(--acc);border-radius:6px}
+.chart .bar .val{font-size:11px;color:var(--txt);min-width:60px;text-align:right}
+</style>
+</head>
+<body>
+<header><h1>💪 Meu Treino</h1><p id="hdrSub">Upper/Lower · 4x/semana</p></header>
+<main id="main"></main>
+<nav>
+<button data-v="hoje" class="active"><span class="ic">📋</span>Hoje</button>
+<button data-v="plano"><span class="ic">📝</span>Plano</button>
+<button data-v="hist"><span class="ic">📅</span>Histórico</button>
+<button data-v="evo"><span class="ic">📈</span>Evolução</button>
+<button data-v="cfg"><span class="ic">⚙️</span>Ajustes</button>
+</nav>
+<script>
+const PLAN_KEY='treino_plan_v1',LOG_KEY='treino_log_v1';
+const DEFAULT_PLAN={
+ days:[
+ {id:'segA',name:'Segunda — Superior A',tag:'SUPERIOR A',warm:'5 min esteira/bike + mobilidade de ombro',finish:'5–10 min esteira moderado',ex:[
+ {n:'Supino reto com halteres',s:'3 × 8–10',d:'90s',o:'Foco na técnica, carga confortável'},
+ {n:'Remada baixa no cabo',s:'3 × 8–10',d:'90s',o:'Tronco firme, puxa com os cotovelos'},
+ {n:'Desenvolvimento halteres sentado',s:'3 × 10–12',d:'60–90s',o:'Cotovelos levemente à frente'},
+ {n:'Puxada alta (pulley)',s:'3 × 10–12',d:'60–90s',o:'Pegada aberta, peito aberto'},
+ {n:'Rosca direta + tríceps corda (bi-set)',s:'3 × 12',d:'45–60s',o:'Um direto no outro'},
+ {n:'Prancha isométrica',s:'3 × 30–40s',d:'45s',o:'Core firme, sem arquear a lombar'}]},
+ {id:'terA',name:'Terça — Inferior A',tag:'INFERIOR A',warm:'5 min bike + agachamento sem carga',finish:'5–10 min esteira/bike',ex:[
+ {n:'Agachamento goblet (halter no peito)',s:'3 × 8–10',d:'90–120s',o:'Carga no peito, coluna neutra'},
+ {n:'Leg press 45°',s:'3 × 10–12',d:'90s',o:'Pés na largura dos ombros'},
+ {n:'Afundo com halteres',s:'3 × 10/perna',d:'60s',o:'Passada curta, joelho alinhado'},
+ {n:'Mesa flexora',s:'3 × 12',d:'60s',o:'Controle na descida'},
+ {n:'Panturrilha em pé',s:'4 × 15',d:'45s',o:'Amplitude completa'},
+ {n:'Abdominal no solo ou máquina',s:'3 × 15–20',d:'45s',o:'Sem puxar o pescoço'}]},
+ {id:'quiB',name:'Quinta — Superior B',tag:'SUPERIOR B',warm:'5 min remo/bike + rotações de ombro',finish:'5–10 min cardio moderado',ex:[
+ {n:'Supino inclinado com halteres',s:'3 × 10–12',d:'90s',o:'Ênfase no peito superior'},
+ {n:'Remada máquina (peito apoiado)',s:'3 × 10–12',d:'90s',o:'Puxa com cotovelos'},
+ {n:'Elevação lateral',s:'3 × 12–15',d:'45–60s',o:'Carga leve, sem balançar'},
+ {n:'Remada unilateral no cabo (serrote)',s:'3 × 10/lado',d:'60s',o:'Apoia joelho no banco'},
+ {n:'Rosca martelo + tríceps francês (bi-set)',s:'3 × 12',d:'45–60s',o:'Um direto no outro'},
+ {n:'Elevação de pernas',s:'3 × 12–15',d:'45s',o:'Lombar apoiada'}]},
+ {id:'sexB',name:'Sexta — Inferior B',tag:'INFERIOR B',warm:'5 min bike + alongamento',finish:'5–10 min esteira',ex:[
+ {n:'Terra romeno com halteres',s:'3 × 8–10',d:'90–120s',o:'Halteres ao lado, coluna neutra'},
+ {n:'Agachamento búlgaro com halteres',s:'3 × 10/perna',d:'60–90s',o:'Pé de trás elevado no banco'},
+ {n:'Cadeira extensora',s:'3 × 12',d:'60s',o:'Pausa de 1s no topo'},
+ {n:'Stiff com halteres',s:'3 × 10–12',d:'60s',o:'Perna quase estendida'},
+ {n:'Panturrilha sentado',s:'4 × 15',d:'45s',o:'Amplitude completa'},
+ {n:'Prancha dinâmica',s:'3 × 30s',d:'45s',o:'Prancha + toque de ombro'}]}
+ ]
+};
+let plan=load(PLAN_KEY,DEFAULT_PLAN),log=load(LOG_KEY,[]),view='hoje',curDay=null;
+function load(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function todayISO(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function fmtDate(iso){const[y,m,d]=iso.split('-');return d+'/'+m+'/'+y}
+function doneToday(){const t=todayISO();return log.find(l=>l.date===t)}
+function render(){
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===view));
+ const m=document.getElementById('main');
+ if(view==='hoje')m.innerHTML=vHoje();else if(view==='plano')m.innerHTML=vPlano();else if(view==='hist')m.innerHTML=vHist();else if(view==='evo')m.innerHTML=vEvo();else m.innerHTML=vCfg();
+}
+function vHoje(){
+ const t=doneToday();
+ let h='<div class="stat"><div class="st"><div class="v">'+log.length+'</div><div class="l">treinos feitos</div></div><div class="st"><div class="v">'+streak()+'</div><div class="l">semanas seguidas*</div></div></div>';
+ h+='<div class="card"><h2>Hoje — '+new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})+'</h2>';
+ if(t){h+='<p class="muted">✅ Treino registrado hoje: <b>'+esc(t.dayName)+'</b></p><div class="btnrow"><button class="btn sec" onclick="openDay(\''+t.dayId+'\')">Ver / editar registro</button></div>'}
+ else{h+='<p class="muted">Nenhum treino registrado hoje. Escolha o treino de hoje:</p>';plan.days.forEach(d=>{h+='<button class="daybtn" onclick="openDay(\''+d.id+'\')"><div><div class="t">'+esc(d.name)+'</div><div class="s">'+d.ex.length+' exercícios · '+esc(d.warm)+'</div></div><span class="badge">Iniciar</span></button>'})}
+ h+='</div><p class="muted" style="font-size:11px">*semanas com pelo menos 3 treinos registrados.</p>';
+ return h;
+}
+function openDay(id){curDay=id;view='sessao';render()}
+function vSessao(){
+ const d=plan.days.find(x=>x.id===curDay);if(!d){view='hoje';return vHoje()}
+ const existing=log.find(l=>l.date===todayISO()&&l.dayId===curDay);
+ const st=existing?existing.sets:{};
+ let h='<div class="card"><h2>'+esc(d.name)+'</h2><p class="muted">🔥 '+esc(d.warm)+'</p></div>';
+ d.ex.forEach((e,i)=>{const k=i;const done=st[k]&&st[k].done;
+ h+='<div class="exrow"><div class="top"><div><div class="nm">'+(i+1)+'. '+esc(e.n)+'</div><div class="sr">'+esc(e.s)+' · descanso '+esc(e.d)+'</div>'+(e.o?'<div class="obs">'+esc(e.o)+'</div>':'')+'</div><div class="chk" onclick="toggleEx('+i+')">'+(done?'✅':'⬜')+'</div></div>';
+ h+='<div class="sets">';
+ const ns=parseInt((e.s.match(/\\d+/)||['3'])[0]);
+ for(let s=1;s<=Math.min(ns,5);s++){const v=st[k]&&st[k]['s'+s]||'';h+='<div class="set"><label>Série '+s+'</label><input placeholder="ex: 20kg×10" value="'+esc(v)+'" onchange="setVal('+i+',\'s'+s+'\',this.value)"></div>'}
+ h+='</div></div>'});
+ h+='<div class="card"><h3>Observações da sessão</h3><textarea rows="2" placeholder="Como foi o treino? Alguma dor?" onchange="setObs(this.value)">'+(existing&&existing.obs?esc(existing.obs):'')+'</textarea>';
+ h+='<div class="btnrow"><button class="btn" onclick="finishDay()">'+(existing?'Salvar alterações':'Concluir treino ✅')+'</button><button class="btn sec" onclick="view=\'hoje\';render()">Voltar</button></div></div>';
+ return h;
+}
+let draft={};
+function toggleEx(i){const k=curDay+'|'+i;draft[k]=!draft[k];render()}
+function setVal(i,f,v){draft[curDay+'|'+i+'|'+f]=v}
+function setObs(v){draft[curDay+'|obs']=v}
+function finishDay(){
+ const d=plan.days.find(x=>x.id===curDay);const sets={};
+ d.ex.forEach((e,i)=>{const done=!!draft[curDay+'|'+i];const s={done};for(let x=1;x<=5;x++){const v=draft[curDay+'|'+i+'|s'+x];if(v!==undefined)s['s'+x]=v;else{const ex=load(LOG_KEY,[]).find(l=>l.date===todayISO()&&l.dayId===curDay);if(ex&&ex.sets[i]&&ex.sets[i]['s'+x]!==undefined)s['s'+x]=ex.sets[i]['s'+x]}}sets[i]=s});
+ const rec={date:todayISO(),dayId:curDay,dayName:d.name,sets,obs:draft[curDay+'|obs']!==undefined?draft[curDay+'|obs']:(load(LOG_KEY,[]).find(l=>l.date===todayISO()&&l.dayId===curDay)||{}).obs||''};
+ const idx=log.findIndex(l=>l.date===rec.date&&l.dayId===rec.dayId);
+ if(idx>=0)log[idx]=rec;else log.push(rec);
+ log.sort((a,b)=>a.date<b.date?-1:1);save(LOG_KEY,log);draft={};view='hoje';render();toast('Treino registrado! 💪');
+}
+function vPlano(){
+ let h='<div class="card"><h2>Plano de treino</h2><p class="muted">Toque num treino para editar exercícios, séries e observações.</p></div>';
+ plan.days.forEach(d=>{h+='<button class="daybtn" onclick="editDay(\''+d.id+'\')"><div><div class="t">'+esc(d.name)+'</div><div class="s">'+d.ex.length+' exercícios</div></div><span class="badge">Editar</span></button>'});
+ return h;
+}
+let editBuf=null;
+function editDay(id){editBuf=JSON.parse(JSON.stringify(plan.days.find(d=>d.id===id)));view='edit';render()}
+function vEdit(){
+ const d=editBuf;if(!d){view='plano';return vPlano()}
+ let h='<div class="card"><h2>Editar: '+esc(d.name)+'</h2><p class="muted">Altere nome, aquecimento/final e exercícios. Salvar aplica no plano (o histórico antigo não muda).</p></div>';
+ h+='<div class="card"><h3>Nome do treino</h3><input id="edName" value="'+esc(d.name)+'" style="width:100%"><h3>Aquecimento</h3><input id="edWarm" value="'+esc(d.warm)+'" style="width:100%"><h3>Final (cardio)</h3><input id="edFinish" value="'+esc(d.finish)+'" style="width:100%"></div>';
+ d.ex.forEach((e,i)=>{h+='<div class="exrow"><div class="top"><div class="nm">Exercício '+(i+1)+'</div><div class="chk" style="color:var(--bad);cursor:pointer" onclick="delEx('+i+')">🗑️</div></div>';
+ h+='<div style="margin-top:8px"><input value="'+esc(e.n)+'" placeholder="Nome" style="width:100%;margin-bottom:6px" onchange="edEx('+i+',\'n\',this.value)">';
+ h+='<div style="display:flex;gap:6px"><input value="'+esc(e.s)+'" placeholder="Séries×Reps" style="flex:1" onchange="edEx('+i+',\'s\',this.value)"><input value="'+esc(e.d)+'" placeholder="Descanso" style="flex:1" onchange="edEx('+i+',\'d\',this.value)"></div>';
+ h+='<input value="'+esc(e.o||'')+'" placeholder="Observação" style="width:100%;margin-top:6px" onchange="edEx('+i+',\'o\',this.value)"></div></div>'});
+ h+='<div class="btnrow"><button class="btn sec" onclick="addEx()">+ Exercício</button></div>';
+ h+='<div class="btnrow"><button class="btn" onclick="saveEdit()">Salvar plano</button><button class="btn sec" onclick="view=\'plano\';render()">Cancelar</button></div>';
+ return h;
+}
+function edEx(i,f,v){editBuf.ex[i][f]=v}
+function delEx(i){editBuf.ex.splice(i,1);render()}
+function addEx(){editBuf.ex.push({n:'Novo exercício',s:'3 × 10',d:'60s',o:''});render()}
+function saveEdit(){editBuf.name=document.getElementById('edName').value;editBuf.warm=document.getElementById('edWarm').value;editBuf.finish=document.getElementById('edFinish').value;
+ const i=plan.days.findIndex(x=>x.id===editBuf.id);plan.days[i]=editBuf;save(PLAN_KEY,plan);view='plano';render();toast('Plano atualizado!')}
+function vHist(){
+ let h='<div class="card"><h2>Histórico</h2><p class="muted">'+log.length+' treinos registrados</p></div>';
+ if(!log.length)return h+'<div class="empty">Nada por aqui ainda. Registre o primeiro treino! 💪</div>';
+ h+='<div class="card">';
+ [...log].reverse().forEach(l=>{const n=Object.values(l.sets).filter(s=>s.done).length;const tot=(plan.days.find(d=>d.id===l.dayId)||{ex:[]}).ex.length||1;
+ h+='<div class="exrow" style="margin-bottom:8px"><div class="top"><div><div class="nm">'+fmtDate(l.date)+' — '+esc(l.dayName)+'</div><div class="sr">'+n+'/'+tot+' exercícios marcados'+(l.obs?' · 📝':'')+'</div></div><div class="chk">'+(n>=tot?'✅':'🟡')+'</div></div>'+(l.obs?'<div class="obs">'+esc(l.obs)+'</div>':'')+'</div>'});
+ return h+'</div>';
+}
+function streak(){
+ const weeks={};log.forEach(l=>{const d=new Date(l.date+'T12:00:00');const onejan=new Date(d.getFullYear(),0,1);const wk=Math.ceil(((d-onejan)/86400000+onejan.getDay()+1)/7);weeks[d.getFullYear()+'-'+wk]=(weeks[d.getFullYear()+'-'+wk]||0)+1});
+ let c=0;const now=new Date();for(let i=0;i<52;i++){const d=new Date(now);d.setDate(d.getDate()-i*7);const onejan=new Date(d.getFullYear(),0,1);const wk=Math.ceil(((d-onejan)/86400000+onejan.getDay()+1)/7);const k=d.getFullYear()+'-'+wk;if((weeks[k]||0)>=3)c++;else if(i>0)break}
+ return c;
+}
+function vEvo(){
+ let h='<div class="card"><h2>Evolução</h2>';
+ if(log.length<2){return h+'<p class="muted">Registre pelo menos 2 treinos para ver a evolução aqui.</p></div>'}
+ const byEx={};
+ log.forEach(l=>{const d=plan.days.find(x=>x.id===l.dayId);if(!d)return;d.ex.forEach((e,i)=>{const s=l.sets[i];if(!s||!s.done)return;let best=0;for(let x=1;x<=5;x++){const v=s['s'+x];if(!v)continue;const m=v.match(/([0-9]+([.,][0-9]+)?)\\s*(kg|Kg|KG)?/);if(m)best=Math.max(best,parseFloat(m[1].replace(',','.')))}
+ if(best>0){if(!byEx[e.n])byEx[e.n]=[];byEx[e.n].push({date:l.date,w:best})}})});
+ const names=Object.keys(byEx);
+ if(!names.length)return h+'<p class="muted">Ainda sem cargas registradas. Preencha as séries no formato <b>20kg×10</b> ao concluir o treino — a evolução aparece aqui automaticamente.</p></div>';
+ names.sort();
+ h+='<p class="muted">Melhor carga registrada por exercício (últimas sessões). Quanto mais treinos com carga anotada, melhor o gráfico.</p></div>';
+ names.forEach(n=>{const pts=byEx[n];const max=Math.max(...pts.map(p=>p.w));const last=pts.slice(-6);
+ h+='<div class="card"><h3>'+esc(n)+'</h3><div class="chart">';
+ last.forEach(p=>{h+='<div class="bar"><div class="lbl">'+fmtDate(p.date)+'</div><div class="track"><div class="fill" style="width:'+Math.round(p.w/max*100)+'%"></div></div><div class="val">'+p.w+' kg</div></div>'});
+ h+='</div><p class="muted" style="margin-top:6px">Recorde: <b>'+max+' kg</b> · '+pts.length+' registros</p></div>'});
+ return h;
+}
+function vCfg(){
+ let h='<div class="card"><h2>Backup e dados</h2><p class="muted">Os dados ficam salvos neste navegador. Exporte de vez em quando — o backup pode ser importado em outro aparelho ou enviado para mim analisar.</p>';
+ h+='<div class="btnrow"><button class="btn" onclick="doExport()">⬇️ Exportar backup</button><button class="btn sec" onclick="document.getElementById(\'impFile\').click()">⬆️ Importar</button></div>';
+ h+='<input type="file" id="impFile" accept=".json" style="display:none" onchange="doImport(this)">';
+ h+='<div class="btnrow"><button class="btn danger" onclick="if(confirm(\'Apagar TODO o histórico? O plano continua.\')){localStorage.removeItem(LOG_KEY);log=[];render();toast(\'Histórico apagado\')}">Apagar histórico</button></div></div>';
+ h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 1.0 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
+ return h;
+}
+function doExport(){const blob=new Blob([JSON.stringify({plan,log,exported:todayISO()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='treino-backup-'+todayISO()+'.json';a.click()}
+function doImport(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.plan)plan=d.plan;if(d.log)log=d.log;save(PLAN_KEY,plan);save(LOG_KEY,log);render();toast('Backup importado!')}catch(e){alert('Arquivo inválido')}};r.readAsText(f)}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render()});
+const _r=render;render=function(){if(view==='sessao')document.getElementById('main').innerHTML=vSessao();else if(view==='edit')document.getElementById('main').innerHTML=vEdit();else _r()};
+render();
+</script>
+</body>
+</html>
