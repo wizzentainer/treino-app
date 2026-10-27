@@ -83,7 +83,7 @@ textarea{resize:vertical;font-family:inherit}
 <button data-v="cfg"><span class="ic">⚙️</span>Ajustes</button>
 </nav>
 <script>
-const PLAN_KEY='treino_plan_v1',LOG_KEY='treino_log_v1',VER_KEY='treino_plan_ver',PLAN_VER='7';
+const PLAN_KEY='treino_plan_v1',LOG_KEY='treino_log_v1',VER_KEY='treino_plan_ver',PLAN_VER='8';
 const DEFAULT_PLAN={
  days:[
  {id:'segA',name:'Segunda — Superior A',tag:'SUPERIOR A',warm:'5 min esteira/bike + mobilidade de ombro',finish:'5–10 min esteira moderado',ex:[
@@ -116,7 +116,7 @@ const DEFAULT_PLAN={
  {n:'Prancha dinâmica',s:'3 × 30s',d:'45s',o:'Prancha + toque de ombro',img:'Plank'}]}
  ]
 };
-let plan=load(PLAN_KEY,DEFAULT_PLAN),log=load(LOG_KEY,[]),view='hoje',curDay=null;
+let plan=load(PLAN_KEY,DEFAULT_PLAN),log=load(LOG_KEY,[]),view='hoje',curDay=null,curDate=null;
 (function migrate(){
  try{
   var storedVer=localStorage.getItem(VER_KEY);
@@ -142,19 +142,35 @@ function render(){
 function vHoje(){
  const t=doneToday();
  let h='<div class="stat"><div class="st"><div class="v">'+log.length+'</div><div class="l">treinos feitos</div></div><div class="st"><div class="v">'+streak()+'</div><div class="l">semanas seguidas*</div></div></div>';
- h+='<div class="card"><h2>Hoje — '+new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})+'</h2>';
- if(t){h+='<p class="muted">✅ Treino registrado hoje: <b>'+esc(t.dayName)+'</b></p><div class="btnrow"><button class="btn sec" onclick="openDay(\''+t.dayId+'\')">Ver / editar registro</button></div>'}
- else{h+='<p class="muted">Nenhum treino registrado hoje. Escolha o treino de hoje:</p>';plan.days.forEach(d=>{h+='<button class="daybtn" onclick="openDay(\''+d.id+'\')"><div><div class="t">'+esc(d.name)+'</div><div class="s">'+d.ex.length+' exercícios · '+esc(d.warm)+'</div></div><span class="badge">Iniciar</span></button>'})}
+ h+='<div class="card"><h2>Hoje \u2014 '+new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})+'</h2>';
+ if(t){h+='<p class="muted">\u2705 Treino registrado hoje: <b>'+esc(t.dayName)+'</b></p><div class="btnrow"><button class="btn sec" onclick="openDay(\''+t.dayId+'\')">Ver / editar registro</button></div>'}
+ else{h+='<p class="muted">Nenhum treino registrado hoje. Escolha o treino de hoje:</p>';plan.days.forEach(d=>{h+='<button class="daybtn" onclick="openDay(\''+d.id+'\')"><div><div class="t">'+esc(d.name)+'</div><div class="s">'+d.ex.length+' exerc\u00edcios \u00b7 '+esc(d.warm)+'</div></div><span class="badge">Iniciar</span></button>'})}
  h+='</div>';
+ h+='<div class="card"><h2>\u23ee\ufe0f Lan\u00e7ar treino de outro dia</h2><p class="muted">Esqueceu de registrar? Escolha a data e o treino \u2014 o hist\u00f3rico guarda no dia certo.</p>';
+ h+='<div style="margin-top:10px"><label class="muted" style="display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.4px">Data</label><input type="date" id="retroDate" value="'+todayISO()+'" max="'+todayISO()+'" onchange="retroPick(this.value)"></div>';
+ h+='<div id="retroList" style="margin-top:10px">'+retroListHtml(todayISO())+'</div></div>';
  const ct=log.find(l=>l.date===todayISO()&&l.dayId==='cardio');
- h+='<div class="card"><h2>🏃 Treino livre</h2>';
- if(ct){h+='<p class="muted">✅ Cardio registrado hoje: <b>'+esc(ct.dayName.replace('Cardio — ',''))+'</b></p>'}
- else{h+='<p class="muted">Bike indoor ou esteira, no ritmo que quiser:</p><div style="display:flex;gap:8px;margin-bottom:10px"><select id="cardioEq" style="flex:1"><option value="Esteira">Esteira</option><option value="Bike indoor">Bike indoor</option></select></div><div class="btnrow">'+[15,30,45,60].map(m=>'<button class="btn sec" onclick="regCardio('+m+')">'+m+' min</button>').join('')+'</div>'}
+ h+='<div class="card"><h2>\u{1F3C3} Treino livre</h2>';
+ if(ct){h+='<p class="muted">\u2705 Cardio registrado hoje: <b>'+esc(ct.dayName.replace('Cardio \u2014 ',''))+'</b></p>'}
+ else{h+='<p class="muted">Bike indoor ou esteira, no ritmo que quiser:</p><div style="display:flex;gap:8px;margin-bottom:10px"><select id="cardioEq" style="flex:1"><option value="Esteira">Esteira</option><option value="Bike indoor">Bike indoor</option></select><input type="date" id="cardioDate" value="'+todayISO()+'" max="'+todayISO()+'" style="flex:1;width:auto"></div><div class="btnrow">'+[15,30,45,60].map(m=>'<button class="btn sec" onclick="regCardio('+m+')">'+m+' min</button>').join('')+'</div>'}
  h+='</div>';
  h+='<p class="muted" style="font-size:11px">*semanas com pelo menos 3 treinos registrados.</p>';
  return h;
 }
-function openDay(id){curDay=id;view='sessao';render()}
+function retroListHtml(dISO){
+ const dd=new Date(dISO+'T12:00:00');
+ let out='<p class="muted" style="font-size:12px">'+dd.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})+'</p>';
+ plan.days.forEach(d=>{
+  const done=log.find(l=>l.date===dISO&&l.dayId===d.id);
+  out+='<button class="daybtn" onclick="openDay(\''+d.id+'\',\''+dISO+'\')"><div><div class="t">'+esc(d.name.replace(/^[^-]+\u2014 /,''))+'</div><div class="s">'+d.ex.length+' exercícios'+(done?' · já registrado':'')+'</div></div><span class="badge'+(done?' done':'')+'">'+(done?'Editar':'Lançar')+'</span></button>';
+ });
+ return out;
+}
+function retroPick(v){
+ const el=document.getElementById('retroList');
+ if(el)el.innerHTML=retroListHtml(v||todayISO());
+}
+function openDay(id,date){curDay=id;curDate=date||todayISO();view='sessao';render()}
 const IMG_BASE='https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
 let imgList=[],imgIdx=0,imgTitle='';
 function openImg(name,imgs,title){
@@ -174,9 +190,14 @@ function exHtml(e,i,done,vals){
 }
 function vSessao(){
  const d=plan.days.find(x=>x.id===curDay);if(!d){view='hoje';return vHoje()}
- const existing=log.find(l=>l.date===todayISO()&&l.dayId===curDay);
+ const dISO=curDate||todayISO();
+ const existing=log.find(l=>l.date===dISO&&l.dayId===curDay);
  const st=existing?existing.sets:{};
- let h='<div class="card"><h2>'+esc(d.name)+'</h2><p class="muted">🔥 '+esc(d.warm)+'</p></div>';
+ const dt=new Date(dISO+'T12:00:00');
+ let h='<div class="card"><h2>'+esc(d.name)+'</h2><p class="muted">🔥 '+esc(d.warm)+'</p>';
+ h+='<div style="margin-top:10px"><label class="muted" style="display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.4px">Data do treino</label><input type="date" id="sessDate" value="'+dISO+'" max="'+todayISO()+'" onchange="chgDate(this.value)"></div>';
+ if(dISO!==todayISO())h+='<p class="muted" style="margin-top:8px">📅 Registrando para <b>'+dt.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})+'</b> (retroativo)</p>';
+ h+='</div>';
  d.ex.forEach((e,i)=>{const k=i;const done=st[k]&&st[k].done;
  h+=exHtml(e,i,done,st[k]);
  h+='<div class="sets">';
@@ -184,20 +205,23 @@ function vSessao(){
  for(let s=1;s<=Math.min(ns,5);s++){const v=st[k]&&st[k]['s'+s]||'';h+='<div class="set"><label>Série '+s+'</label><input placeholder="ex: 20kg×10" value="'+esc(v)+'" onchange="setVal('+i+',\'s'+s+'\',this.value)"></div>'}
  h+='</div></div>'});
  h+='<div class="card"><h3>Observações da sessão</h3><textarea rows="2" placeholder="Como foi o treino? Alguma dor?" onchange="setObs(this.value)">'+(existing&&existing.obs?esc(existing.obs):'')+'</textarea>';
- h+='<div class="btnrow"><button class="btn" onclick="finishDay()">'+(existing?'Salvar alterações':'Concluir treino ✅')+'</button><button class="btn sec" onclick="view=\'hoje\';render()">Voltar</button></div></div>';
+ h+='<div class="btnrow"><button class="btn" onclick="finishDay()">'+(existing?'Salvar alterações':'Concluir treino ✅')+'</button><button class="btn sec" onclick="view=\'hoje\';curDate=null;render()">Voltar</button></div></div>';
  return h;
 }
+function chgDate(v){curDate=v||todayISO();draft={};render()}
 let draft={};
 function toggleEx(i){const k=curDay+'|'+i;draft[k]=!draft[k];render()}
 function setVal(i,f,v){draft[curDay+'|'+i+'|'+f]=v}
 function setObs(v){draft[curDay+'|obs']=v}
 function finishDay(){
- const d=plan.days.find(x=>x.id===curDay);const sets={};
- d.ex.forEach((e,i)=>{const done=!!draft[curDay+'|'+i];const s={done};for(let x=1;x<=5;x++){const v=draft[curDay+'|'+i+'|s'+x];if(v!==undefined)s['s'+x]=v;else{const ex=load(LOG_KEY,[]).find(l=>l.date===todayISO()&&l.dayId===curDay);if(ex&&ex.sets[i]&&ex.sets[i]['s'+x]!==undefined)s['s'+x]=ex.sets[i]['s'+x]}}sets[i]=s});
- const rec={date:todayISO(),dayId:curDay,dayName:d.name,sets,obs:draft[curDay+'|obs']!==undefined?draft[curDay+'|obs']:(load(LOG_KEY,[]).find(l=>l.date===todayISO()&&l.dayId===curDay)||{}).obs||''};
+ const d=plan.days.find(x=>x.id===curDay);const dISO=curDate||todayISO();const sets={};
+ const prev=load(LOG_KEY,[]).find(l=>l.date===dISO&&l.dayId===curDay);
+ d.ex.forEach((e,i)=>{const done=!!draft[curDay+'|'+i];const s={done};for(let x=1;x<=5;x++){const v=draft[curDay+'|'+i+'|s'+x];if(v!==undefined)s['s'+x]=v;else if(prev&&prev.sets[i]&&prev.sets[i]['s'+x]!==undefined)s['s'+x]=prev.sets[i]['s'+x]}sets[i]=s});
+ const rec={date:dISO,dayId:curDay,dayName:d.name,sets,obs:draft[curDay+'|obs']!==undefined?draft[curDay+'|obs']:(prev&&prev.obs)||''};
  const idx=log.findIndex(l=>l.date===rec.date&&l.dayId===rec.dayId);
  if(idx>=0)log[idx]=rec;else log.push(rec);
- log.sort((a,b)=>a.date<b.date?-1:1);save(LOG_KEY,log);draft={};view='hoje';render();toast('Treino registrado! 💪');
+ log.sort((a,b)=>a.date<b.date?-1:1);save(LOG_KEY,log);draft={};curDate=null;view='hoje';render();
+ toast(dISO===todayISO()?'Treino registrado! 💪':'Treino de '+fmtDate(dISO)+' registrado! 💪');
 }
 function vPlano(){
  let h='<div class="card"><h2>Plano de treino</h2><p class="muted">Toque num treino para editar exercícios, séries e observações.</p></div>';
@@ -211,9 +235,9 @@ function vEdit(){
  let h='<div class="card"><h2>Editar: '+esc(d.name)+'</h2><p class="muted">Altere nome, aquecimento/final e exercícios. Salvar aplica no plano (o histórico antigo não muda).</p></div>';
  h+='<div class="card"><h3>Nome do treino</h3><input id="edName" value="'+esc(d.name)+'" style="width:100%"><h3>Aquecimento</h3><input id="edWarm" value="'+esc(d.warm)+'" style="width:100%"><h3>Final (cardio)</h3><input id="edFinish" value="'+esc(d.finish)+'" style="width:100%"></div>';
  d.ex.forEach((e,i)=>{h+='<div class="exrow"><div class="top"><div class="nm">Exercício '+(i+1)+'</div><div class="chk" style="color:var(--bad);cursor:pointer" onclick="delEx('+i+')">🗑️</div></div>';
- h+='<div style="margin-top:8px"><input value="'+esc(e.n)+'" placeholder="Nome" style="width:100%;margin-bottom:6px" onchange="edEx('+i+',\'n\',this.value)">';
- h+='<div style="display:flex;gap:6px"><input value="'+esc(e.s)+'" placeholder="Séries×Reps" style="flex:1" onchange="edEx('+i+',\'s\',this.value)"><input value="'+esc(e.d)+'" placeholder="Descanso" style="flex:1" onchange="edEx('+i+',\'d\',this.value)"></div>';
- h+='<input value="'+esc(e.o||'')+'" placeholder="Observação" style="width:100%;margin-top:6px" onchange="edEx('+i+',\'o\',this.value)"></div></div>'});
+ h+='<div style="margin-top:8px"><input value="'+esc(e.n)+'" placeholder="Nome" style="width:100%;margin-bottom:6px" onchange="edEx('+i+',',this.value)">';
+ h+='<div style="display:flex;gap:6px"><input value="'+esc(e.s)+'" placeholder="Séries×Reps" style="flex:1" onchange="edEx('+i+',',this.value)"><input value="'+esc(e.d)+'" placeholder="Descanso" style="flex:1" onchange="edEx('+i+',',this.value)"></div>';
+ h+='<input value="'+esc(e.o||'')+'" placeholder="Observação" style="width:100%;margin-top:6px" onchange="edEx('+i+',',this.value)"></div></div>'});
  h+='<div class="btnrow"><button class="btn sec" onclick="addEx()">+ Exercício</button></div>';
  h+='<div class="btnrow"><button class="btn" onclick="saveEdit()">Salvar plano</button><button class="btn sec" onclick="view=\'plano\';render()">Cancelar</button></div>';
  return h;
@@ -234,8 +258,11 @@ function vHist(){
 }
 function regCardio(min){
  const eq=document.getElementById('cardioEq')?document.getElementById('cardioEq').value:'Esteira';
- log.push({date:todayISO(),dayId:'cardio',dayName:'Cardio — '+eq+' '+min+' min',sets:{},obs:''});
- log.sort((a,b)=>a.date<b.date?-1:1);save(LOG_KEY,log);view='hoje';render();toast('Cardio registrado! 🏃');
+ const cd=document.getElementById('cardioDate');
+ const cdISO=(cd&&cd.value)?cd.value:todayISO();
+ log.push({date:cdISO,dayId:'cardio',dayName:'Cardio — '+eq+' '+min+' min',sets:{},obs:''});
+ log.sort((a,b)=>a.date<b.date?-1:1);save(LOG_KEY,log);view='hoje';render();
+ toast(cdISO===todayISO()?'Cardio registrado! 🏃':'Cardio de '+fmtDate(cdISO)+' registrado! 🏃');
 }
 function streak(){
  const weeks={};log.forEach(l=>{const d=new Date(l.date+'T12:00:00');const onejan=new Date(d.getFullYear(),0,1);const wk=Math.ceil(((d-onejan)/86400000+onejan.getDay()+1)/7);weeks[d.getFullYear()+'-'+wk]=(weeks[d.getFullYear()+'-'+wk]||0)+1});
@@ -263,7 +290,7 @@ function vCfg(){
  h+='<div class="btnrow"><button class="btn" onclick="doExport()">⬇️ Exportar backup</button><button class="btn sec" onclick="document.getElementById(\'impFile\').click()">⬆️ Importar</button></div>';
  h+='<input type="file" id="impFile" accept=".json" style="display:none" onchange="doImport(this)">';
  h+='<div class="btnrow"><button class="btn danger" onclick="if(confirm(\'Apagar TODO o histórico? O plano continua.\')){localStorage.removeItem(LOG_KEY);log=[];render();toast(\'Histórico apagado\')}">Apagar histórico</button></div></div>';
- h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 1.7 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
+ h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 1.8 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
  return h;
 }
 function doExport(){const blob=new Blob([JSON.stringify({plan,log,exported:todayISO()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='treino-backup-'+todayISO()+'.json';a.click()}
