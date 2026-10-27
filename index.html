@@ -126,7 +126,13 @@ function vHoje(){
  h+='<div class="card"><h2>Hoje — '+new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})+'</h2>';
  if(t){h+='<p class="muted">✅ Treino registrado hoje: <b>'+esc(t.dayName)+'</b></p><div class="btnrow"><button class="btn sec" onclick="openDay(\''+t.dayId+'\')">Ver / editar registro</button></div>'}
  else{h+='<p class="muted">Nenhum treino registrado hoje. Escolha o treino de hoje:</p>';plan.days.forEach(d=>{h+='<button class="daybtn" onclick="openDay(\''+d.id+'\')"><div><div class="t">'+esc(d.name)+'</div><div class="s">'+d.ex.length+' exercícios · '+esc(d.warm)+'</div></div><span class="badge">Iniciar</span></button>'})}
- h+='</div><p class="muted" style="font-size:11px">*semanas com pelo menos 3 treinos registrados.</p>';
+ h+='</div>';
+ const ct=log.find(l=>l.date===todayISO()&&l.dayId==='cardio');
+ h+='<div class="card"><h2>🏃 Treino livre</h2>';
+ if(ct){h+='<p class="muted">✅ Cardio registrado hoje: <b>'+esc(ct.dayName.replace('Cardio — ',''))+'</b></p>'}
+ else{h+='<p class="muted">Bike indoor ou esteira, no ritmo que quiser:</p><div style="display:flex;gap:8px;margin-bottom:10px"><select id="cardioEq" style="flex:1"><option value="Esteira">Esteira</option><option value="Bike indoor">Bike indoor</option></select></div><div class="btnrow">'+[15,30,45,60].map(m=>'<button class="btn sec" onclick="regCardio('+m+')">'+m+' min</button>').join('')+'</div>'}
+ h+='</div>';
+ h+='<p class="muted" style="font-size:11px">*semanas com pelo menos 3 treinos registrados.</p>';
  return h;
 }
 function openDay(id){curDay=id;view='sessao';render()}
@@ -138,7 +144,7 @@ function vSessao(){
  d.ex.forEach((e,i)=>{const k=i;const done=st[k]&&st[k].done;
  h+='<div class="exrow"><div class="top"><div><div class="nm">'+(i+1)+'. '+esc(e.n)+'</div><div class="sr">'+esc(e.s)+' · descanso '+esc(e.d)+'</div>'+(e.o?'<div class="obs">'+esc(e.o)+'</div>':'')+'</div><div class="chk" onclick="toggleEx('+i+')">'+(done?'✅':'⬜')+'</div></div>';
  h+='<div class="sets">';
- const ns=parseInt((e.s.match(/\\d+/)||['3'])[0]);
+ const ns=parseInt((e.s.match(/\d+/)||['3'])[0]);
  for(let s=1;s<=Math.min(ns,5);s++){const v=st[k]&&st[k]['s'+s]||'';h+='<div class="set"><label>Série '+s+'</label><input placeholder="ex: 20kg×10" value="'+esc(v)+'" onchange="setVal('+i+',\'s'+s+'\',this.value)"></div>'}
  h+='</div></div>'});
  h+='<div class="card"><h3>Observações da sessão</h3><textarea rows="2" placeholder="Como foi o treino? Alguma dor?" onchange="setObs(this.value)">'+(existing&&existing.obs?esc(existing.obs):'')+'</textarea>';
@@ -156,6 +162,11 @@ function finishDay(){
  const idx=log.findIndex(l=>l.date===rec.date&&l.dayId===rec.dayId);
  if(idx>=0)log[idx]=rec;else log.push(rec);
  log.sort((a,b)=>a.date<b.date?-1:1);save(LOG_KEY,log);draft={};view='hoje';render();toast('Treino registrado! 💪');
+}
+function regCardio(min){
+ const eq=document.getElementById('cardioEq')?document.getElementById('cardioEq').value:'Esteira';
+ log.push({date:todayISO(),dayId:'cardio',dayName:'Cardio — '+eq+' '+min+' min',sets:{},obs:''});
+ log.sort((a,b)=>a.date<b.date?-1:1);save(LOG_KEY,log);view='hoje';render();toast('Cardio registrado! 🏃');
 }
 function vPlano(){
  let h='<div class="card"><h2>Plano de treino</h2><p class="muted">Toque num treino para editar exercícios, séries e observações.</p></div>';
@@ -185,7 +196,8 @@ function vHist(){
  let h='<div class="card"><h2>Histórico</h2><p class="muted">'+log.length+' treinos registrados</p></div>';
  if(!log.length)return h+'<div class="empty">Nada por aqui ainda. Registre o primeiro treino! 💪</div>';
  h+='<div class="card">';
- [...log].reverse().forEach(l=>{const n=Object.values(l.sets).filter(s=>s.done).length;const tot=(plan.days.find(d=>d.id===l.dayId)||{ex:[]}).ex.length||1;
+ [...log].reverse().forEach(l=>{if(l.dayId==='cardio'){h+='<div class="exrow" style="margin-bottom:8px"><div class="top"><div><div class="nm">'+fmtDate(l.date)+' — '+esc(l.dayName)+'</div><div class="sr">🏃 treino livre</div></div><div class="chk">✅</div></div>'+(l.obs?'<div class="obs">'+esc(l.obs)+'</div>':'')+'</div>';return}
+ const n=Object.values(l.sets).filter(s=>s.done).length;const tot=(plan.days.find(d=>d.id===l.dayId)||{ex:[]}).ex.length||1;
  h+='<div class="exrow" style="margin-bottom:8px"><div class="top"><div><div class="nm">'+fmtDate(l.date)+' — '+esc(l.dayName)+'</div><div class="sr">'+n+'/'+tot+' exercícios marcados'+(l.obs?' · 📝':'')+'</div></div><div class="chk">'+(n>=tot?'✅':'🟡')+'</div></div>'+(l.obs?'<div class="obs">'+esc(l.obs)+'</div>':'')+'</div>'});
  return h+'</div>';
 }
@@ -198,7 +210,7 @@ function vEvo(){
  let h='<div class="card"><h2>Evolução</h2>';
  if(log.length<2){return h+'<p class="muted">Registre pelo menos 2 treinos para ver a evolução aqui.</p></div>'}
  const byEx={};
- log.forEach(l=>{const d=plan.days.find(x=>x.id===l.dayId);if(!d)return;d.ex.forEach((e,i)=>{const s=l.sets[i];if(!s||!s.done)return;let best=0;for(let x=1;x<=5;x++){const v=s['s'+x];if(!v)continue;const m=v.match(/([0-9]+([.,][0-9]+)?)\\s*(kg|Kg|KG)?/);if(m)best=Math.max(best,parseFloat(m[1].replace(',','.')))}
+ log.forEach(l=>{const d=plan.days.find(x=>x.id===l.dayId);if(!d)return;d.ex.forEach((e,i)=>{const s=l.sets[i];if(!s||!s.done)return;let best=0;for(let x=1;x<=5;x++){const v=s['s'+x];if(!v)continue;const m=v.match(/([0-9]+([.,][0-9]+)?)\s*(kg|Kg|KG)?/);if(m)best=Math.max(best,parseFloat(m[1].replace(',','.')))}
  if(best>0){if(!byEx[e.n])byEx[e.n]=[];byEx[e.n].push({date:l.date,w:best})}})});
  const names=Object.keys(byEx);
  if(!names.length)return h+'<p class="muted">Ainda sem cargas registradas. Preencha as séries no formato <b>20kg×10</b> ao concluir o treino — a evolução aparece aqui automaticamente.</p></div>';
@@ -215,7 +227,7 @@ function vCfg(){
  h+='<div class="btnrow"><button class="btn" onclick="doExport()">⬇️ Exportar backup</button><button class="btn sec" onclick="document.getElementById(\'impFile\').click()">⬆️ Importar</button></div>';
  h+='<input type="file" id="impFile" accept=".json" style="display:none" onchange="doImport(this)">';
  h+='<div class="btnrow"><button class="btn danger" onclick="if(confirm(\'Apagar TODO o histórico? O plano continua.\')){localStorage.removeItem(LOG_KEY);log=[];render();toast(\'Histórico apagado\')}">Apagar histórico</button></div></div>';
- h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 1.0 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
+ h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 1.1 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
  return h;
 }
 function doExport(){const blob=new Blob([JSON.stringify({plan,log,exported:todayISO()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='treino-backup-'+todayISO()+'.json';a.click()}
