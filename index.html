@@ -83,7 +83,7 @@ textarea{resize:vertical;font-family:inherit}
 <button data-v="cfg"><span class="ic">⚙️</span>Ajustes</button>
 </nav>
 <script>
-const PLAN_KEY='treino_plan_v1',LOG_KEY='treino_log_v1',VER_KEY='treino_plan_ver',PLAN_VER='6';
+const PLAN_KEY='treino_plan_v1',LOG_KEY='treino_log_v1',VER_KEY='treino_plan_ver',PLAN_VER='7';
 const DEFAULT_PLAN={
  days:[
  {id:'segA',name:'Segunda — Superior A',tag:'SUPERIOR A',warm:'5 min esteira/bike + mobilidade de ombro',finish:'5–10 min esteira moderado',ex:[
@@ -109,7 +109,7 @@ const DEFAULT_PLAN={
  {n:'Abdominal máquina',s:'3 × 15',d:'45s',o:'Enrola a coluna, sem puxar com os braços',img:'Ab_Crunch_Machine'}]},
  {id:'sexB',name:'Sexta — Inferior B',tag:'INFERIOR B',warm:'5 min bike + alongamento',finish:'5–10 min esteira',ex:[
  {n:'Cadeira flexora (deitado)',s:'3 × 10–12',d:'90s',o:'Controle na descida, sem balançar o quadril',img:'Lying_Leg_Curls'},
- {n:'Smith machine agachamento (máquina guiada)',s:'3 × 10–12',d:'90–120s',o:'Pés à frente, costas apoiadas na guia',img:'Smith_Machine_Squat'},
+ {n:'Leg press 45°',s:'3 × 10–12',d:'90–120s',o:'Pés na largura dos ombros, sem arquear a lombar',img:'Leg_Press'},
  {n:'Cadeira extensora',s:'3 × 12',d:'60s',o:'Pausa de 1s no topo',img:'Leg_Extensions'},
  {n:'Cadeira abdutora',s:'3 × 15',d:'45s',o:'Movimento controlado, sem impulso',img:'Thigh_Abductor'},
  {n:'Panturrilha sentado',s:'4 × 15',d:'45s',o:'Amplitude completa',img:'Seated_Calf_Raise'},
@@ -263,7 +263,7 @@ function vCfg(){
  h+='<div class="btnrow"><button class="btn" onclick="doExport()">⬇️ Exportar backup</button><button class="btn sec" onclick="document.getElementById(\'impFile\').click()">⬆️ Importar</button></div>';
  h+='<input type="file" id="impFile" accept=".json" style="display:none" onchange="doImport(this)">';
  h+='<div class="btnrow"><button class="btn danger" onclick="if(confirm(\'Apagar TODO o histórico? O plano continua.\')){localStorage.removeItem(LOG_KEY);log=[];render();toast(\'Histórico apagado\')}">Apagar histórico</button></div></div>';
- h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 1.6 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
+ h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 1.7 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
  return h;
 }
 function doExport(){const blob=new Blob([JSON.stringify({plan,log,exported:todayISO()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='treino-backup-'+todayISO()+'.json';a.click()}
