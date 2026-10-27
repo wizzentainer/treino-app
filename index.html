@@ -83,7 +83,7 @@ textarea{resize:vertical;font-family:inherit}
 <button data-v="cfg"><span class="ic">⚙️</span>Ajustes</button>
 </nav>
 <script>
-const PLAN_KEY='treino_plan_v1',LOG_KEY='treino_log_v1';
+const PLAN_KEY='treino_plan_v1',LOG_KEY='treino_log_v1',VER_KEY='treino_plan_ver',PLAN_VER='5';
 const DEFAULT_PLAN={
  days:[
  {id:'segA',name:'Segunda — Superior A',tag:'SUPERIOR A',warm:'5 min esteira/bike + mobilidade de ombro',finish:'5–10 min esteira moderado',ex:[
@@ -96,6 +96,7 @@ const DEFAULT_PLAN={
  {id:'terA',name:'Terça — Inferior A',tag:'INFERIOR A',warm:'5 min bike + agachamento sem carga',finish:'5–10 min esteira/bike',ex:[
  {n:'Agachamento hack (máquina)',s:'3 × 10–12',d:'90s',o:'Costas apoiadas, desce controlado',img:'Hack_Squat'},
  {n:'Leg press 45°',s:'3 × 10–12',d:'90s',o:'Pés na largura dos ombros',img:'Leg_Press'},
+ {n:'Cadeira extensora',s:'3 × 12',d:'60s',o:'Pausa de 1s no topo',img:'Leg_Extensions'},
  {n:'Cadeira flexora',s:'3 × 12',d:'60s',o:'Controle na descida',img:'Seated_Leg_Curl'},
  {n:'Panturrilha em pé',s:'4 × 15',d:'45s',o:'Amplitude completa',img:'Standing_Calf_Raises'},
  {n:'Abdominal no solo ou máquina',s:'3 × 15–20',d:'45s',o:'Sem puxar o pescoço',img:'Crunches'}]},
@@ -105,17 +106,29 @@ const DEFAULT_PLAN={
  {n:'Elevação lateral',s:'3 × 12–15',d:'45–60s',o:'Carga leve, sem balançar',img:'Side_Lateral_Raise'},
  {n:'Remada unilateral no cabo (serrote)',s:'3 × 10/lado',d:'60s',o:'Apoia joelho no banco',img:'One-Arm_Dumbbell_Row'},
  {n:'Rosca martelo + tríceps francês (bi-set)',s:'3 × 12',d:'45–60s',o:'Um direto no outro',img:'Alternate_Hammer_Curl',img2:'Dumbbell_One-Arm_Triceps_Extension'},
- {n:'Elevação de pernas',s:'3 × 12–15',d:'45s',o:'Lombar apoiada',img:'Flat_Bench_Lying_Leg_Raise'}]},
+ {n:'Abdominal no cabo (cable crunch)',s:'3 × 15',d:'45s',o:'Joelho apoiado, enrola a coluna',img:'Cable_Crunch'}]},
  {id:'sexB',name:'Sexta — Inferior B',tag:'INFERIOR B',warm:'5 min bike + alongamento',finish:'5–10 min esteira',ex:[
- {n:'Terra romeno com halteres',s:'3 × 8–10',d:'90–120s',o:'Halteres ao lado, coluna neutra',img:'Romanian_Deadlift'},
- {n:'Agachamento búlgaro com halteres',s:'3 × 10/perna',d:'60–90s',o:'Pé de trás elevado no banco',img:'Split_Squat_with_Dumbbells'},
+ {n:'Cadeira flexora (deitado)',s:'3 × 10–12',d:'90s',o:'Controle na descida, sem balançar o quadril',img:'Lying_Leg_Curls'},
+ {n:'Smith machine agachamento (máquina guiada)',s:'3 × 10–12',d:'90–120s',o:'Pés à frente, costas apoiadas na guia',img:'Smith_Machine_Squat'},
  {n:'Cadeira extensora',s:'3 × 12',d:'60s',o:'Pausa de 1s no topo',img:'Leg_Extensions'},
- {n:'Stiff com halteres',s:'3 × 10–12',d:'60s',o:'Perna quase estendida',img:'Stiff-Legged_Dumbbell_Deadlift'},
+ {n:'Cadeira abdutora',s:'3 × 15',d:'45s',o:'Movimento controlado, sem impulso',img:'Thigh_Abductor'},
  {n:'Panturrilha sentado',s:'4 × 15',d:'45s',o:'Amplitude completa',img:'Seated_Calf_Raise'},
  {n:'Prancha dinâmica',s:'3 × 30s',d:'45s',o:'Prancha + toque de ombro',img:'Plank'}]}
  ]
 };
 let plan=load(PLAN_KEY,DEFAULT_PLAN),log=load(LOG_KEY,[]),view='hoje',curDay=null;
+// Migração do plano: quando o app traz um plano novo (versão), aplica os dias novos
+// no navegador do usuário. O HISTÓRICO de treinos é sempre preservado.
+(function migrate(){
+ try{
+  var storedVer=localStorage.getItem(VER_KEY);
+  if(storedVer!==PLAN_VER){
+   plan={days:DEFAULT_PLAN.days.slice()};
+   save(PLAN_KEY,plan);
+   localStorage.setItem(VER_KEY,PLAN_VER);
+  }
+ }catch(e){}
+})();
 function load(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}}
 function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
@@ -252,7 +265,7 @@ function vCfg(){
  h+='<div class="btnrow"><button class="btn" onclick="doExport()">⬇️ Exportar backup</button><button class="btn sec" onclick="document.getElementById(\'impFile\').click()">⬆️ Importar</button></div>';
  h+='<input type="file" id="impFile" accept=".json" style="display:none" onchange="doImport(this)">';
  h+='<div class="btnrow"><button class="btn danger" onclick="if(confirm(\'Apagar TODO o histórico? O plano continua.\')){localStorage.removeItem(LOG_KEY);log=[];render();toast(\'Histórico apagado\')}">Apagar histórico</button></div></div>';
- h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 1.4 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
+ h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 1.5 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
  return h;
 }
 function doExport(){const blob=new Blob([JSON.stringify({plan,log,exported:todayISO()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='treino-backup-'+todayISO()+'.json';a.click()}
