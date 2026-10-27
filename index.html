@@ -94,9 +94,9 @@ const DEFAULT_PLAN={
  {n:'Rosca direta + tríceps corda (bi-set)',s:'3 × 12',d:'45–60s',o:'Um direto no outro',img:'Standing_Inner-Biceps_Curl',img2:'Cable_Rope_Overhead_Triceps_Extension'},
  {n:'Prancha isométrica',s:'3 × 30–40s',d:'45s',o:'Core firme, sem arquear a lombar',img:'Plank'}]},
  {id:'terA',name:'Terça — Inferior A',tag:'INFERIOR A',warm:'5 min bike + agachamento sem carga',finish:'5–10 min esteira/bike',ex:[
- {n:'Agachamento goblet (halter no peito)',s:'3 × 8–10',d:'90–120s',o:'Carga no peito, coluna neutra',img:'Goblet_Squat'},
+ {n:'Agachamento sumo com halter (plié)',s:'3 × 10–12',d:'90s',o:'Pés afastados, pontas dos pés para fora',img:'Plie_Dumbbell_Squat'},
  {n:'Leg press 45°',s:'3 × 10–12',d:'90s',o:'Pés na largura dos ombros',img:'Leg_Press'},
- {n:'Afundo com halteres',s:'3 × 10/perna',d:'60s',o:'Passada curta, joelho alinhado',img:'Dumbbell_Lunges'},
+ {n:'Passada lateral (afundo lateral) com halteres',s:'3 × 10/perna',d:'60s',o:'Passo largo para o lado, joelho alinhado',img:'Dumbbell_Rear_Lunge'},
  {n:'Mesa flexora',s:'3 × 12',d:'60s',o:'Controle na descida',img:'Seated_Leg_Curl'},
  {n:'Panturrilha em pé',s:'4 × 15',d:'45s',o:'Amplitude completa',img:'Standing_Calf_Raises'},
  {n:'Abdominal no solo ou máquina',s:'3 × 15–20',d:'45s',o:'Sem puxar o pescoço',img:'Crunches'}]},
@@ -253,7 +253,7 @@ function vCfg(){
  h+='<div class="btnrow"><button class="btn" onclick="doExport()">⬇️ Exportar backup</button><button class="btn sec" onclick="document.getElementById(\'impFile\').click()">⬆️ Importar</button></div>';
  h+='<input type="file" id="impFile" accept=".json" style="display:none" onchange="doImport(this)">';
  h+='<div class="btnrow"><button class="btn danger" onclick="if(confirm(\'Apagar TODO o histórico? O plano continua.\')){localStorage.removeItem(LOG_KEY);log=[];render();toast(\'Histórico apagado\')}">Apagar histórico</button></div></div>';
- h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 1.2 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
+ h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 1.3 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
  return h;
 }
 function doExport(){const blob=new Blob([JSON.stringify({plan,log,exported:todayISO()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='treino-backup-'+todayISO()+'.json';a.click()}
