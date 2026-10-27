@@ -31,6 +31,14 @@ main{padding:16px;max-width:640px;margin:0 auto}
 .exrow{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
 .exrow .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .exrow .nm{font-weight:600;font-size:14px}
+.exrow .nm.hasimg{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+#imgModal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+#imgModal.open{display:flex}
+#imgModal img{max-width:100%;max-height:70vh;border-radius:12px;margin-bottom:12px}
+#imgModal .cap{color:#fff;font-size:14px;text-align:center;margin-bottom:14px}
+#imgModal .nav{display:flex;gap:10px}
+#imgModal .nav button{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-size:14px;cursor:pointer}
+#imgModal .x{position:absolute;top:14px;right:16px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer}
 .exrow .sr{font-size:12px;color:var(--mut);margin-top:2px}
 .exrow .obs{font-size:12px;color:var(--mut);margin-top:4px;font-style:italic}
 .exrow .chk{font-size:22px;cursor:pointer;user-select:none;line-height:1}
@@ -66,6 +74,7 @@ textarea{resize:vertical;font-family:inherit}
 <body>
 <header><h1>💪 Meu Treino</h1><p id="hdrSub">Upper/Lower · 4x/semana</p></header>
 <main id="main"></main>
+<div id="imgModal" onclick="if(event.target===this)closeImg()"><button class="x" onclick="closeImg()">✕</button><img id="imgEl" src="" alt=""><div class="cap" id="imgCap"></div><div class="nav"><button onclick="imgPrev()">◀ Anterior</button><button onclick="imgNext()">Próxima ▶</button></div></div>
 <nav>
 <button data-v="hoje" class="active"><span class="ic">📋</span>Hoje</button>
 <button data-v="plano"><span class="ic">📝</span>Plano</button>
@@ -78,33 +87,33 @@ const PLAN_KEY='treino_plan_v1',LOG_KEY='treino_log_v1';
 const DEFAULT_PLAN={
  days:[
  {id:'segA',name:'Segunda — Superior A',tag:'SUPERIOR A',warm:'5 min esteira/bike + mobilidade de ombro',finish:'5–10 min esteira moderado',ex:[
- {n:'Supino reto com halteres',s:'3 × 8–10',d:'90s',o:'Foco na técnica, carga confortável'},
- {n:'Remada baixa no cabo',s:'3 × 8–10',d:'90s',o:'Tronco firme, puxa com os cotovelos'},
- {n:'Desenvolvimento halteres sentado',s:'3 × 10–12',d:'60–90s',o:'Cotovelos levemente à frente'},
- {n:'Puxada alta (pulley)',s:'3 × 10–12',d:'60–90s',o:'Pegada aberta, peito aberto'},
- {n:'Rosca direta + tríceps corda (bi-set)',s:'3 × 12',d:'45–60s',o:'Um direto no outro'},
- {n:'Prancha isométrica',s:'3 × 30–40s',d:'45s',o:'Core firme, sem arquear a lombar'}]},
+ {n:'Supino reto com halteres',s:'3 × 8–10',d:'90s',o:'Foco na técnica, carga confortável',img:'Dumbbell_Bench_Press'},
+ {n:'Remada baixa no cabo',s:'3 × 8–10',d:'90s',o:'Tronco firme, puxa com os cotovelos',img:'Seated_Cable_Rows'},
+ {n:'Desenvolvimento halteres sentado',s:'3 × 10–12',d:'60–90s',o:'Cotovelos levemente à frente',img:'Dumbbell_Shoulder_Press'},
+ {n:'Puxada alta (pulley)',s:'3 × 10–12',d:'60–90s',o:'Pegada aberta, peito aberto',img:'Close-Grip_Front_Lat_Pulldown'},
+ {n:'Rosca direta + tríceps corda (bi-set)',s:'3 × 12',d:'45–60s',o:'Um direto no outro',img:'Standing_Inner-Biceps_Curl',img2:'Cable_Rope_Overhead_Triceps_Extension'},
+ {n:'Prancha isométrica',s:'3 × 30–40s',d:'45s',o:'Core firme, sem arquear a lombar',img:'Plank'}]},
  {id:'terA',name:'Terça — Inferior A',tag:'INFERIOR A',warm:'5 min bike + agachamento sem carga',finish:'5–10 min esteira/bike',ex:[
- {n:'Agachamento goblet (halter no peito)',s:'3 × 8–10',d:'90–120s',o:'Carga no peito, coluna neutra'},
- {n:'Leg press 45°',s:'3 × 10–12',d:'90s',o:'Pés na largura dos ombros'},
- {n:'Afundo com halteres',s:'3 × 10/perna',d:'60s',o:'Passada curta, joelho alinhado'},
- {n:'Mesa flexora',s:'3 × 12',d:'60s',o:'Controle na descida'},
- {n:'Panturrilha em pé',s:'4 × 15',d:'45s',o:'Amplitude completa'},
- {n:'Abdominal no solo ou máquina',s:'3 × 15–20',d:'45s',o:'Sem puxar o pescoço'}]},
+ {n:'Agachamento goblet (halter no peito)',s:'3 × 8–10',d:'90–120s',o:'Carga no peito, coluna neutra',img:'Goblet_Squat'},
+ {n:'Leg press 45°',s:'3 × 10–12',d:'90s',o:'Pés na largura dos ombros',img:'Leg_Press'},
+ {n:'Afundo com halteres',s:'3 × 10/perna',d:'60s',o:'Passada curta, joelho alinhado',img:'Dumbbell_Lunges'},
+ {n:'Mesa flexora',s:'3 × 12',d:'60s',o:'Controle na descida',img:'Seated_Leg_Curl'},
+ {n:'Panturrilha em pé',s:'4 × 15',d:'45s',o:'Amplitude completa',img:'Standing_Calf_Raises'},
+ {n:'Abdominal no solo ou máquina',s:'3 × 15–20',d:'45s',o:'Sem puxar o pescoço',img:'Crunches'}]},
  {id:'quiB',name:'Quinta — Superior B',tag:'SUPERIOR B',warm:'5 min remo/bike + rotações de ombro',finish:'5–10 min cardio moderado',ex:[
- {n:'Supino inclinado com halteres',s:'3 × 10–12',d:'90s',o:'Ênfase no peito superior'},
- {n:'Remada máquina (peito apoiado)',s:'3 × 10–12',d:'90s',o:'Puxa com cotovelos'},
- {n:'Elevação lateral',s:'3 × 12–15',d:'45–60s',o:'Carga leve, sem balançar'},
- {n:'Remada unilateral no cabo (serrote)',s:'3 × 10/lado',d:'60s',o:'Apoia joelho no banco'},
- {n:'Rosca martelo + tríceps francês (bi-set)',s:'3 × 12',d:'45–60s',o:'Um direto no outro'},
- {n:'Elevação de pernas',s:'3 × 12–15',d:'45s',o:'Lombar apoiada'}]},
+ {n:'Supino inclinado com halteres',s:'3 × 10–12',d:'90s',o:'Ênfase no peito superior',img:'Incline_Dumbbell_Press'},
+ {n:'Remada máquina (peito apoiado)',s:'3 × 10–12',d:'90s',o:'Puxa com cotovelos',img:'Seated_Cable_Rows'},
+ {n:'Elevação lateral',s:'3 × 12–15',d:'45–60s',o:'Carga leve, sem balançar',img:'Side_Lateral_Raise'},
+ {n:'Remada unilateral no cabo (serrote)',s:'3 × 10/lado',d:'60s',o:'Apoia joelho no banco',img:'One-Arm_Dumbbell_Row'},
+ {n:'Rosca martelo + tríceps francês (bi-set)',s:'3 × 12',d:'45–60s',o:'Um direto no outro',img:'Alternate_Hammer_Curl',img2:'Dumbbell_One-Arm_Triceps_Extension'},
+ {n:'Elevação de pernas',s:'3 × 12–15',d:'45s',o:'Lombar apoiada',img:'Flat_Bench_Lying_Leg_Raise'}]},
  {id:'sexB',name:'Sexta — Inferior B',tag:'INFERIOR B',warm:'5 min bike + alongamento',finish:'5–10 min esteira',ex:[
- {n:'Terra romeno com halteres',s:'3 × 8–10',d:'90–120s',o:'Halteres ao lado, coluna neutra'},
- {n:'Agachamento búlgaro com halteres',s:'3 × 10/perna',d:'60–90s',o:'Pé de trás elevado no banco'},
- {n:'Cadeira extensora',s:'3 × 12',d:'60s',o:'Pausa de 1s no topo'},
- {n:'Stiff com halteres',s:'3 × 10–12',d:'60s',o:'Perna quase estendida'},
- {n:'Panturrilha sentado',s:'4 × 15',d:'45s',o:'Amplitude completa'},
- {n:'Prancha dinâmica',s:'3 × 30s',d:'45s',o:'Prancha + toque de ombro'}]}
+ {n:'Terra romeno com halteres',s:'3 × 8–10',d:'90–120s',o:'Halteres ao lado, coluna neutra',img:'Romanian_Deadlift'},
+ {n:'Agachamento búlgaro com halteres',s:'3 × 10/perna',d:'60–90s',o:'Pé de trás elevado no banco',img:'Split_Squat_with_Dumbbells'},
+ {n:'Cadeira extensora',s:'3 × 12',d:'60s',o:'Pausa de 1s no topo',img:'Leg_Extensions'},
+ {n:'Stiff com halteres',s:'3 × 10–12',d:'60s',o:'Perna quase estendida',img:'Stiff-Legged_Dumbbell_Deadlift'},
+ {n:'Panturrilha sentado',s:'4 × 15',d:'45s',o:'Amplitude completa',img:'Seated_Calf_Raise'},
+ {n:'Prancha dinâmica',s:'3 × 30s',d:'45s',o:'Prancha + toque de ombro',img:'Plank'}]}
  ]
 };
 let plan=load(PLAN_KEY,DEFAULT_PLAN),log=load(LOG_KEY,[]),view='hoje',curDay=null;
@@ -136,13 +145,30 @@ function vHoje(){
  return h;
 }
 function openDay(id){curDay=id;view='sessao';render()}
+const IMG_BASE='https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+let imgList=[],imgIdx=0,imgTitle='';
+function openImg(name,imgs,title){
+ imgList=(imgs||[]).map(f=>IMG_BASE+f);imgIdx=0;imgTitle=title||name;
+ if(!imgList.length)return;
+ showImg();document.getElementById('imgModal').classList.add('open');
+}
+function showImg(){document.getElementById('imgEl').src=imgList[imgIdx];document.getElementById('imgCap').textContent=imgTitle+' — imagem '+(imgIdx+1)+' de '+imgList.length}
+function imgPrev(){if(imgIdx>0){imgIdx--;showImg()}}
+function imgNext(){if(imgIdx<imgList.length-1){imgIdx++;showImg()}}
+function closeImg(){document.getElementById('imgModal').classList.remove('open')}
+function exHtml(e,i,done,vals){
+ const imgs=e.img2?[e.img,e.img2]:[e.img];
+ const js="openImg('"+esc(e.n)+"',["+imgs.map(f=>"'"+f+"/0.jpg','"+f+"/1.jpg'").join(',')+"],'"+esc(e.s)+"')";
+ const nmcls=e.img?'nm hasimg':'nm';
+ return '<div class="exrow"><div class="top"><div><div class="'+nmcls+'" '+(e.img?'onclick="'+js+'"':'')+'>'+(i+1)+'. '+esc(e.n)+(e.img?' 📷':'')+'</div><div class="sr">'+esc(e.s)+' · descanso '+esc(e.d)+'</div>'+(e.o?'<div class="obs">'+esc(e.o)+'</div>':'')+'</div><div class="chk" onclick="toggleEx('+i+')">'+(done?'✅':'⬜')+'</div></div>';
+}
 function vSessao(){
  const d=plan.days.find(x=>x.id===curDay);if(!d){view='hoje';return vHoje()}
  const existing=log.find(l=>l.date===todayISO()&&l.dayId===curDay);
  const st=existing?existing.sets:{};
  let h='<div class="card"><h2>'+esc(d.name)+'</h2><p class="muted">🔥 '+esc(d.warm)+'</p></div>';
  d.ex.forEach((e,i)=>{const k=i;const done=st[k]&&st[k].done;
- h+='<div class="exrow"><div class="top"><div><div class="nm">'+(i+1)+'. '+esc(e.n)+'</div><div class="sr">'+esc(e.s)+' · descanso '+esc(e.d)+'</div>'+(e.o?'<div class="obs">'+esc(e.o)+'</div>':'')+'</div><div class="chk" onclick="toggleEx('+i+')">'+(done?'✅':'⬜')+'</div></div>';
+ h+=exHtml(e,i,done,st[k]);
  h+='<div class="sets">';
  const ns=parseInt((e.s.match(/\d+/)||['3'])[0]);
  for(let s=1;s<=Math.min(ns,5);s++){const v=st[k]&&st[k]['s'+s]||'';h+='<div class="set"><label>Série '+s+'</label><input placeholder="ex: 20kg×10" value="'+esc(v)+'" onchange="setVal('+i+',\'s'+s+'\',this.value)"></div>'}
@@ -162,11 +188,6 @@ function finishDay(){
  const idx=log.findIndex(l=>l.date===rec.date&&l.dayId===rec.dayId);
  if(idx>=0)log[idx]=rec;else log.push(rec);
  log.sort((a,b)=>a.date<b.date?-1:1);save(LOG_KEY,log);draft={};view='hoje';render();toast('Treino registrado! 💪');
-}
-function regCardio(min){
- const eq=document.getElementById('cardioEq')?document.getElementById('cardioEq').value:'Esteira';
- log.push({date:todayISO(),dayId:'cardio',dayName:'Cardio — '+eq+' '+min+' min',sets:{},obs:''});
- log.sort((a,b)=>a.date<b.date?-1:1);save(LOG_KEY,log);view='hoje';render();toast('Cardio registrado! 🏃');
 }
 function vPlano(){
  let h='<div class="card"><h2>Plano de treino</h2><p class="muted">Toque num treino para editar exercícios, séries e observações.</p></div>';
@@ -201,6 +222,11 @@ function vHist(){
  h+='<div class="exrow" style="margin-bottom:8px"><div class="top"><div><div class="nm">'+fmtDate(l.date)+' — '+esc(l.dayName)+'</div><div class="sr">'+n+'/'+tot+' exercícios marcados'+(l.obs?' · 📝':'')+'</div></div><div class="chk">'+(n>=tot?'✅':'🟡')+'</div></div>'+(l.obs?'<div class="obs">'+esc(l.obs)+'</div>':'')+'</div>'});
  return h+'</div>';
 }
+function regCardio(min){
+ const eq=document.getElementById('cardioEq')?document.getElementById('cardioEq').value:'Esteira';
+ log.push({date:todayISO(),dayId:'cardio',dayName:'Cardio — '+eq+' '+min+' min',sets:{},obs:''});
+ log.sort((a,b)=>a.date<b.date?-1:1);save(LOG_KEY,log);view='hoje';render();toast('Cardio registrado! 🏃');
+}
 function streak(){
  const weeks={};log.forEach(l=>{const d=new Date(l.date+'T12:00:00');const onejan=new Date(d.getFullYear(),0,1);const wk=Math.ceil(((d-onejan)/86400000+onejan.getDay()+1)/7);weeks[d.getFullYear()+'-'+wk]=(weeks[d.getFullYear()+'-'+wk]||0)+1});
  let c=0;const now=new Date();for(let i=0;i<52;i++){const d=new Date(now);d.setDate(d.getDate()-i*7);const onejan=new Date(d.getFullYear(),0,1);const wk=Math.ceil(((d-onejan)/86400000+onejan.getDay()+1)/7);const k=d.getFullYear()+'-'+wk;if((weeks[k]||0)>=3)c++;else if(i>0)break}
@@ -227,7 +253,7 @@ function vCfg(){
  h+='<div class="btnrow"><button class="btn" onclick="doExport()">⬇️ Exportar backup</button><button class="btn sec" onclick="document.getElementById(\'impFile\').click()">⬆️ Importar</button></div>';
  h+='<input type="file" id="impFile" accept=".json" style="display:none" onchange="doImport(this)">';
  h+='<div class="btnrow"><button class="btn danger" onclick="if(confirm(\'Apagar TODO o histórico? O plano continua.\')){localStorage.removeItem(LOG_KEY);log=[];render();toast(\'Histórico apagado\')}">Apagar histórico</button></div></div>';
- h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 1.1 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
+ h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 1.2 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
  return h;
 }
 function doExport(){const blob=new Blob([JSON.stringify({plan,log,exported:todayISO()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='treino-backup-'+todayISO()+'.json';a.click()}
