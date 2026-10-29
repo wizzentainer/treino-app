@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Treino">
-<title>Treino — Upper/Lower</title>
+<title>Treino — Push/Pull/Legs</title>
 <style>
 :root{--bg:#0f1115;--card:#1a1d24;--card2:#22262f;--txt:#e8eaf0;--mut:#8b93a5;--acc:#4f8cff;--ok:#2ecc71;--warn:#f39c12;--bad:#e74c3c;--line:#2c313c}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -83,7 +83,7 @@ textarea{resize:vertical;font-family:inherit}
 </style>
 </head>
 <body>
-<header><h1>💪 Meu Treino</h1><p id="hdrSub">Upper/Lower · 4x/semana</p></header>
+<header><h1>💪 Meu Treino</h1><p id="hdrSub">Push/Pull/Legs · 3x/semana · 45 min</p></header>
 <main id="main"></main>
 <div id="imgModal" onclick="if(event.target===this)closeImg()"><button class="x" onclick="closeImg()">✕</button><img id="imgEl" src="" alt=""><div class="cap" id="imgCap"></div><div class="nav"><button onclick="imgPrev()">◀ Anterior</button><button onclick="imgNext()">Próxima ▶</button></div></div>
 <nav>
@@ -94,37 +94,31 @@ textarea{resize:vertical;font-family:inherit}
 <button data-v="cfg"><span class="ic">⚙️</span>Ajustes</button>
 </nav>
 <script>
-const PLAN_KEY='treino_plan_v1',LOG_KEY='treino_log_v1',VER_KEY='treino_plan_ver',PLAN_VER='9';
+const PLAN_KEY='treino_plan_v1',LOG_KEY='treino_log_v1',VER_KEY='treino_plan_ver',ARCH_KEY='treino_arch_v1',PLAN_VER='10';
 const DEFAULT_PLAN={
  days:[
- {id:'segA',name:'Segunda — Superior A',tag:'SUPERIOR A',warm:'5 min esteira/bike + mobilidade de ombro',finish:'5–10 min esteira moderado',ex:[
- {n:'Supino reto com halteres',s:'3 × 8–10',d:'90s',o:'No lugar do supino com barra — foco na técnica',img:'Dumbbell_Bench_Press'},
- {n:'Desenvolvimento halteres sentado',s:'3 × 10–12',d:'90s',o:'No lugar do supino inclinado com barra',img:'Dumbbell_Shoulder_Press'},
- {n:'Remada baixa no cabo',s:'3 × 8–10',d:'90s',o:'Tronco firme, puxa com os cotovelos',img:'Seated_Cable_Rows'},
- {n:'Puxada alta (pulley)',s:'3 × 10–12',d:'60–90s',o:'Pegada aberta, peito aberto',img:'Close-Grip_Front_Lat_Pulldown'},
- {n:'Rosca direta + tríceps corda (bi-set)',s:'3 × 12',d:'45–60s',o:'Um direto no outro',img:'Standing_Inner-Biceps_Curl',img2:'Cable_Rope_Overhead_Triceps_Extension'},
- {n:'Prancha isométrica',s:'3 × 30–40s',d:'45s',o:'Core firme, sem arquear a lombar',img:'Plank'}]},
- {id:'terA',name:'Terça — Inferior A',tag:'INFERIOR A',warm:'5 min bike + agachamento sem carga',finish:'5–10 min esteira/bike',ex:[
- {n:'Agachamento hack (máquina)',s:'3 × 10–12',d:'90s',o:'Costas apoiadas, desce controlado',img:'Hack_Squat'},
- {n:'Leg press 45°',s:'3 × 10–12',d:'90s',o:'Pés na largura dos ombros',img:'Leg_Press'},
- {n:'Cadeira extensora',s:'3 × 12',d:'60s',o:'Pausa de 1s no topo',img:'Leg_Extensions'},
- {n:'Cadeira flexora',s:'3 × 12',d:'60s',o:'Controle na descida',img:'Seated_Leg_Curl'},
- {n:'Panturrilha em pé',s:'4 × 15',d:'45s',o:'Amplitude completa',img:'Standing_Calf_Raises'},
- {n:'Abdominal no solo ou máquina',s:'3 × 15–20',d:'45s',o:'Sem puxar o pescoço',img:'Crunches'}]},
- {id:'quiB',name:'Quinta — Superior B',tag:'SUPERIOR B',warm:'5 min remo/bike + rotações de ombro',finish:'5–10 min cardio moderado',ex:[
- {n:'Supino inclinado com halteres',s:'3 × 10–12',d:'90s',o:'Ênfase no peito superior',img:'Incline_Dumbbell_Press'},
- {n:'Remada máquina (peito apoiado)',s:'3 × 10–12',d:'90s',o:'Puxa com cotovelos',img:'Seated_Cable_Rows'},
- {n:'Elevação lateral',s:'3 × 12–15',d:'45–60s',o:'Carga leve, sem balançar',img:'Side_Lateral_Raise'},
- {n:'Remada unilateral no cabo (serrote)',s:'3 × 10/lado',d:'60s',o:'Apoia joelho no banco',img:'One-Arm_Dumbbell_Row'},
- {n:'Rosca martelo + tríceps francês (bi-set)',s:'3 × 12',d:'45–60s',o:'Um direto no outro',img:'Alternate_Hammer_Curl',img2:'Dumbbell_One-Arm_Triceps_Extension'},
- {n:'Abdominal máquina',s:'3 × 15',d:'45s',o:'Enrola a coluna, sem puxar com os braços',img:'Ab_Crunch_Machine'}]},
- {id:'sexB',name:'Sexta — Inferior B',tag:'INFERIOR B',warm:'5 min bike + alongamento',finish:'5–10 min esteira',ex:[
- {n:'Cadeira flexora (deitado)',s:'3 × 10–12',d:'90s',o:'Controle na descida, sem balançar o quadril',img:'Lying_Leg_Curls'},
- {n:'Leg press 45°',s:'3 × 10–12',d:'90–120s',o:'Pés na largura dos ombros, sem arquear a lombar',img:'Leg_Press'},
- {n:'Cadeira extensora',s:'3 × 12',d:'60s',o:'Pausa de 1s no topo',img:'Leg_Extensions'},
- {n:'Cadeira abdutora',s:'3 × 15',d:'45s',o:'Movimento controlado, sem impulso',img:'Thigh_Abductor'},
- {n:'Panturrilha sentado',s:'4 × 15',d:'45s',o:'Amplitude completa',img:'Seated_Calf_Raise'},
- {n:'Prancha dinâmica',s:'3 × 30s',d:'45s',o:'Prancha + toque de ombro',img:'Plank'}]}
+ {id:'segP',name:'Segunda — Push',tag:'PUSH',warm:'5 min esteira/bike + mobilidade de ombro',finish:'Cardio opcional 20–30 min nos dias livres',ex:[
+ {n:'Supino máquina (ou supino reto com halteres)',s:'4 × 8–10',d:'75–90s',o:'RIR 1–2: parar 1–2 reps antes da falha',img:'Machine_Bench_Press',img2:'Dumbbell_Bench_Press'},
+ {n:'Supino inclinado máquina',s:'3 × 10–12',d:'75–90s',o:'RIR 1–2',img:'Incline_Dumbbell_Press'},
+ {n:'Desenvolvimento máquina (ombro)',s:'3 × 10–12',d:'75–90s',o:'RIR 1–2',img:'Machine_Shoulder_Military_Press'},
+ {n:'Elevação lateral com halteres',s:'3 × 12–15',d:'45–60s',o:'Pode chegar mais perto da falha · superset com tríceps na corda',img:'Side_Lateral_Raise'},
+ {n:'Tríceps na polia (corda)',s:'3 × 12–15',d:'45–60s',o:'Superset com elevação lateral para ganhar tempo',img:'Triceps_Pushdown_-_Rope_Attachment'},
+ {n:'Tríceps francês ou testa',s:'2 × 12–15',d:'45–60s',o:'Pode chegar mais perto da falha',img:'Dumbbell_One-Arm_Triceps_Extension'}]},
+ {id:'quaP',name:'Quarta — Pull',tag:'PULL',warm:'5 min remo/bike + rotações de ombro',finish:'Cardio opcional 20–30 min nos dias livres',ex:[
+ {n:'Puxada alta frente (pulley)',s:'4 × 8–10',d:'75–90s',o:'Puxe com as costas, não com o bíceps',img:'Wide-Grip_Lat_Pulldown'},
+ {n:'Remada máquina (ou remada baixa)',s:'3 × 10–12',d:'75–90s',o:'Puxe com as costas, não com o bíceps',img:'Seated_Cable_Rows'},
+ {n:'Remada unilateral com halter',s:'3 × 10–12',d:'75–90s',o:'Apoia a mão no banco, sem girar o tronco',img:'One-Arm_Dumbbell_Row'},
+ {n:'Rosca direta (barra ou halteres)',s:'3 × 10–12',d:'45–60s',o:'Sem balançar o tronco',img:'Barbell_Curl'},
+ {n:'Rosca martelo',s:'3 × 12',d:'45–60s',o:'Superset com encolhimento economiza minutos',img:'Alternate_Hammer_Curl'},
+ {n:'Encolhimento (halteres ou máquina)',s:'3 × 12–15',d:'45–60s',o:'Superset com rosca martelo',img:'Dumbbell_Shrug'}]},
+ {id:'sexL',name:'Sexta — Legs + Core',tag:'LEGS + CORE',warm:'5 min bike + mobilidade de quadril',finish:'Cardio opcional 20–30 min nos dias livres',ex:[
+ {n:'Leg press',s:'4 × 10–12',d:'90s',o:'Carga desafiadora, sem virar aeróbico',img:'Leg_Press'},
+ {n:'Agachamento (smith ou livre)',s:'3 × 10',d:'90s',o:'Se não se sentir firme com barra, use o leg press ou hack',img:'Smith_Machine_Squat'},
+ {n:'Cadeira extensora',s:'3 × 12–15',d:'45–60s',o:'Superset com a flexora ajuda a fechar no tempo',img:'Leg_Extensions'},
+ {n:'Mesa ou cadeira flexora',s:'3 × 12',d:'45–60s',o:'Superset com a extensora',img:'Lying_Leg_Curls'},
+ {n:'Stiff com halteres (ou cadeira abdutora)',s:'3 × 12',d:'45–60s',o:'Sem arquear a lombar',img:'Stiff-Legged_Dumbbell_Deadlift'},
+ {n:'Panturrilha em pé',s:'4 × 15–20',d:'45–60s',o:'Amplitude completa',img:'Standing_Calf_Raises'},
+ {n:'Prancha (ou abdominal máquina)',s:'3 × até a falha técnica',d:'45–60s',o:'Core firme, sem arquear a lombar',img:'Plank'}]}
  ]
 };
 let plan=load(PLAN_KEY,DEFAULT_PLAN),log=load(LOG_KEY,[]),view='hoje',curDay=null,curDate=null;
@@ -132,12 +126,23 @@ let plan=load(PLAN_KEY,DEFAULT_PLAN),log=load(LOG_KEY,[]),view='hoje',curDay=nul
  try{
   var storedVer=localStorage.getItem(VER_KEY);
   if(storedVer!==PLAN_VER){
+   // preserva os treinos que existiam antes em vez de apagar
+   var arch=load(ARCH_KEY,[]);
+   var newIds=DEFAULT_PLAN.days.map(function(d){return d.id});
+   (plan.days||[]).forEach(function(d){
+    if(newIds.indexOf(d.id)>=0)return;
+    if(arch.some(function(a){return a.id===d.id}))return;
+    arch.push(d);
+   });
+   save(ARCH_KEY,arch);
    plan={days:DEFAULT_PLAN.days.slice()};
    save(PLAN_KEY,plan);
    localStorage.setItem(VER_KEY,PLAN_VER);
   }
  }catch(e){}
 })();
+function allDays(){return plan.days.concat(load(ARCH_KEY,[]))}
+function findDay(id){return allDays().find(function(d){return d.id===id})}
 function load(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}}
 function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
@@ -212,7 +217,7 @@ function parseRestSecs(d){
  return m?parseInt(m[0],10):60;
 }
 function vSessao(){
- const d=plan.days.find(x=>x.id===curDay);if(!d){view='hoje';return vHoje()}
+ const d=findDay(curDay);if(!d){view='hoje';return vHoje()}
  const dISO=curDate||todayISO();
  const existing=log.find(l=>l.date===dISO&&l.dayId===curDay);
  const st=existing?existing.sets:{};
@@ -237,7 +242,7 @@ function toggleEx(i){const k=curDay+'|'+i;draft[k]=!draft[k];render()}
 function setVal(i,f,v){draft[curDay+'|'+i+'|'+f]=v}
 function setObs(v){draft[curDay+'|obs']=v}
 function finishDay(){
- const d=plan.days.find(x=>x.id===curDay);const dISO=curDate||todayISO();const sets={};
+ const d=findDay(curDay);const dISO=curDate||todayISO();const sets={};
  const prev=load(LOG_KEY,[]).find(l=>l.date===dISO&&l.dayId===curDay);
  d.ex.forEach((e,i)=>{const done=!!draft[curDay+'|'+i];const s={done};for(let x=1;x<=5;x++){const v=draft[curDay+'|'+i+'|s'+x];if(v!==undefined)s['s'+x]=v;else if(prev&&prev.sets[i]&&prev.sets[i]['s'+x]!==undefined)s['s'+x]=prev.sets[i]['s'+x]}sets[i]=s});
  const exNames=d.ex.map(function(e){return e.n});
@@ -248,8 +253,14 @@ function finishDay(){
  toast(dISO===todayISO()?'Treino registrado! 💪':'Treino de '+fmtDate(dISO)+' registrado! 💪');
 }
 function vPlano(){
- let h='<div class="card"><h2>Plano de treino</h2><p class="muted">Toque num treino para editar exercícios, séries e observações.</p></div>';
+ let h='<div class="card"><h2>Plano de treino — Push / Pull / Legs</h2><p class="muted">3x/semana · ~45 min por sessão. Toque num treino para editar exercícios, séries e observações.</p></div>';
  plan.days.forEach(d=>{h+='<button class="daybtn" data-edit="'+d.id+'"><div><div class="t">'+esc(d.name)+'</div><div class="s">'+d.ex.length+' exercícios</div></div><span class="badge">Editar</span></button>'});
+ const arch=load(ARCH_KEY,[]);
+ if(arch.length){
+  h+='<div class="card" style="margin-top:14px"><h3>Treinos anteriores (preservados)</h3><p class="muted" style="font-size:12px">O plano antigo continua aqui — o histórico dele não foi apagado. Dá para abrir e registrar normalmente.</p>';
+  arch.forEach(d=>{h+='<button class="daybtn" data-open="'+d.id+'" style="margin-top:8px"><div><div class="t">'+esc(d.name)+'</div><div class="s">'+d.ex.length+' exercícios · arquivado</div></div><span class="badge">Abrir</span></button>'});
+  h+='</div>';
+ }
  return h;
 }
 let editBuf=null;
@@ -287,7 +298,7 @@ function vHist(){
  if(!log.length)return h+'<div class="empty">Nada por aqui ainda. Registre o primeiro treino! 💪</div>';
  h+='<div class="card">';
  [...log].reverse().forEach(l=>{if(l.dayId==='cardio'){h+='<div class="exrow" style="margin-bottom:8px"><div class="top"><div><div class="nm">'+fmtDate(l.date)+' — '+esc(l.dayName)+'</div><div class="sr">🏃 treino livre</div></div><div class="chk">✅</div></div>'+(l.obs?'<div class="obs">'+esc(l.obs)+'</div>':'')+'</div>';return}
- const n=Object.values(l.sets).filter(s=>s.done).length;const tot=(plan.days.find(d=>d.id===l.dayId)||{ex:[]}).ex.length||1;
+ const n=Object.values(l.sets).filter(s=>s.done).length;const tot=(l.exNames?l.exNames.length:((findDay(l.dayId)||{ex:[]}).ex.length))||1;
  h+='<div class="exrow" style="margin-bottom:8px"><div class="top"><div><div class="nm">'+fmtDate(l.date)+' — '+esc(l.dayName)+'</div><div class="sr">'+n+'/'+tot+' exercícios marcados'+(l.obs?' · 📝':'')+'</div></div><div class="chk">'+(n>=tot?'✅':'🟡')+'</div></div>'+(l.obs?'<div class="obs">'+esc(l.obs)+'</div>':'')+'</div>'});
  return h+'</div>';
 }
@@ -308,8 +319,17 @@ function vEvo(){
  let h='<div class="card"><h2>Evolução</h2>';
  if(log.length<2){return h+'<p class="muted">Registre pelo menos 2 treinos para ver a evolução aqui.</p></div>'}
  const byEx={};
- log.forEach(l=>{const d=plan.days.find(x=>x.id===l.dayId);if(!d)return;const namesSrc=l.exNames||[];d.ex.forEach((e,i)=>{const exName=namesSrc[i]||e.n;const s=l.sets[i];if(!s||!s.done)return;let best=0;for(let x=1;x<=5;x++){const v=s['s'+x];if(!v)continue;const m=v.match(/[0-9]+([.,][0-9]+)?/);if(m)best=Math.max(best,parseFloat(m[0].replace(',','.')))}
- if(best>0){if(!byEx[exName])byEx[exName]=[];byEx[exName].push({date:l.date,w:best})}})});
+ log.forEach(l=>{
+  if(l.dayId==='cardio')return;
+  const d=findDay(l.dayId);
+  const names=l.exNames?l.exNames.slice():(d?d.ex.map(function(e){return e.n}):[]);
+  names.forEach(function(nm,i){
+   const s=l.sets?l.sets[i]:null;if(!s||!s.done)return;
+   let best=0;
+   for(let x=1;x<=5;x++){const v=s['s'+x];if(!v)continue;const m=v.match(/[0-9]+([.,][0-9]+)?/);if(m)best=Math.max(best,parseFloat(m[0].replace(',','.')))}
+   if(best>0){if(!byEx[nm])byEx[nm]=[];byEx[nm].push({date:l.date,w:best})}
+  });
+ });
  const names=Object.keys(byEx);
  if(!names.length)return h+'<p class="muted">Ainda sem cargas registradas. Preencha as séries no formato <b>20kg×10</b> ao concluir o treino — a evolução aparece aqui automaticamente.</p></div>';
  names.sort();
@@ -325,11 +345,12 @@ function vCfg(){
  h+='<div class="btnrow"><button class="btn" onclick="doExport()">⬇️ Exportar backup</button><button class="btn sec" data-import="1">⬆️ Importar</button></div>';
  h+='<input type="file" id="impFile" accept=".json" style="display:none" onchange="doImport(this)">';
  h+='<div class="btnrow"><button class="btn danger" data-wipe="1">Apagar histórico</button></div></div>';
- h+='<div class="card"><h2>Sobre</h2><p class="muted">Treino Upper/Lower 4x/semana · condicionamento e saúde geral.<br>Versão 2.0 · criado em 26/10/2026.<br>Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
+ const _a=load(ARCH_KEY,[]);
+ h+='<div class="card"><h2>Sobre</h2><p class="muted">Plano Push/Pull/Legs 3x/semana · ~45 min por sessão.<br>Versão 3.0 · atualizado em 28/10/2026.<br>'+( _a.length?('Treinos antigos preservados: '+_a.map(function(d){return esc(d.name)}).join(', ')+'.<br>'):'')+'Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
  return h;
 }
-function doExport(){const blob=new Blob([JSON.stringify({plan,log,exported:todayISO()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='treino-backup-'+todayISO()+'.json';a.click()}
-function doImport(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.plan)plan=d.plan;if(d.log)log=d.log;save(PLAN_KEY,plan);save(LOG_KEY,log);render();toast('Backup importado!')}catch(e){alert('Arquivo inválido')}};r.readAsText(f)}
+function doExport(){const blob=new Blob([JSON.stringify({plan,log,arch:load(ARCH_KEY,[]),exported:todayISO()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='treino-backup-'+todayISO()+'.json';a.click()}
+function doImport(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.plan)plan=d.plan;if(d.log)log=d.log;if(d.arch)save(ARCH_KEY,d.arch);save(PLAN_KEY,plan);save(LOG_KEY,log);render();toast('Backup importado!')}catch(e){alert('Arquivo inválido')}};r.readAsText(f)}
 var timers={};
 function startTimer(i,secs){
  stopTimer(i);
