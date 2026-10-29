@@ -12,8 +12,12 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;padding-bottom:80px}
 header{position:sticky;top:0;background:var(--bg);padding:14px 16px 10px;border-bottom:1px solid var(--line);z-index:10}
+header .hrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 header h1{font-size:20px;font-weight:700}
 header p{font-size:12px;color:var(--mut);margin-top:2px}
+#btnRefresh{background:var(--card2);border:1px solid var(--line);border-radius:10px;color:var(--txt);width:40px;height:40px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+#btnRefresh.busy{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:10;padding-bottom:env(safe-area-inset-bottom)}
 nav button{flex:1;background:none;border:none;color:var(--mut);font-size:11px;padding:10px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
 nav button .ic{font-size:20px}
@@ -83,7 +87,7 @@ textarea{resize:vertical;font-family:inherit}
 </style>
 </head>
 <body>
-<header><h1>💪 Meu Treino</h1><p id="hdrSub">Push/Pull/Legs · 3x/semana · 45 min</p></header>
+<header><div class="hrow"><div><h1>💪 Meu Treino</h1><p id="hdrSub">Push/Pull/Legs · 3x/semana · 45 min</p></div><button id="btnRefresh" data-refresh="1" title="Atualizar página" aria-label="Atualizar página">🔄</button></div></header>
 <main id="main"></main>
 <div id="imgModal" onclick="if(event.target===this)closeImg()"><button class="x" onclick="closeImg()">✕</button><img id="imgEl" src="" alt=""><div class="cap" id="imgCap"></div><div class="nav"><button onclick="imgPrev()">◀ Anterior</button><button onclick="imgNext()">Próxima ▶</button></div></div>
 <nav>
@@ -344,13 +348,36 @@ function vCfg(){
  let h='<div class="card"><h2>Backup e dados</h2><p class="muted">Os dados ficam salvos neste navegador. Exporte de vez em quando — o backup pode ser importado em outro aparelho ou enviado para mim analisar.</p>';
  h+='<div class="btnrow"><button class="btn" onclick="doExport()">⬇️ Exportar backup</button><button class="btn sec" data-import="1">⬆️ Importar</button></div>';
  h+='<input type="file" id="impFile" accept=".json" style="display:none" onchange="doImport(this)">';
+ h+='<div class="btnrow"><button class="btn sec" data-refresh="1">🔄 Atualizar app (buscar versão nova)</button></div>';
  h+='<div class="btnrow"><button class="btn danger" data-wipe="1">Apagar histórico</button></div></div>';
  const _a=load(ARCH_KEY,[]);
- h+='<div class="card"><h2>Sobre</h2><p class="muted">Plano Push/Pull/Legs 3x/semana · ~45 min por sessão.<br>Versão 3.0 · atualizado em 28/10/2026.<br>'+( _a.length?('Treinos antigos preservados: '+_a.map(function(d){return esc(d.name)}).join(', ')+'.<br>'):'')+'Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
+ h+='<div class="card"><h2>Sobre</h2><p class="muted">Plano Push/Pull/Legs 3x/semana · ~45 min por sessão.<br>Versão 3.1 · atualizado em 28/10/2026.<br>'+( _a.length?('Treinos antigos preservados: '+_a.map(function(d){return esc(d.name)}).join(', ')+'.<br>'):'')+'Para mudanças estruturais, peça ao Side no Maestro.</p></div>';
  return h;
 }
 function doExport(){const blob=new Blob([JSON.stringify({plan,log,arch:load(ARCH_KEY,[]),exported:todayISO()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='treino-backup-'+todayISO()+'.json';a.click()}
 function doImport(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(d.plan)plan=d.plan;if(d.log)log=d.log;if(d.arch)save(ARCH_KEY,d.arch);save(PLAN_KEY,plan);save(LOG_KEY,log);render();toast('Backup importado!')}catch(e){alert('Arquivo inválido')}};r.readAsText(f)}
+// ---- Atualizar o app (busca a versão nova, sem apagar os dados) ----
+function hardReload(){
+ if(view==='sessao'&&Object.keys(draft).length){
+  if(!confirm('Você tem marcações/cargas ainda não salvas nesta sessão.\n\nAtualizar agora descarta o que não foi salvo. Continuar?'))return;
+ }
+ var b=document.getElementById('btnRefresh');if(b)b.classList.add('busy');
+ var u;
+ try{u=new URL(location.href)}catch(e){u=null}
+ if(u){u.searchParams.set('r',Date.now());location.replace(u.toString())}
+ else{location.href=location.pathname+'?r='+Date.now()}
+}
+// limpa o parâmetro do cache-buster depois que a página abriu
+(function cleanBust(){
+ try{
+  var u=new URL(location.href);
+  if(u.searchParams.has('r')){
+   u.searchParams.delete('r');
+   var q=u.searchParams.toString();
+   history.replaceState(null,'',u.pathname+(q?'?'+q:'')+u.hash);
+  }
+ }catch(e){}
+})();
 var timers={};
 function startTimer(i,secs){
  stopTimer(i);
@@ -397,8 +424,9 @@ function beep(){
 }
 document.addEventListener('click',function(ev){
  var t=ev.target;
- while(t&&t!==document&&!(t.getAttribute&&(t.getAttribute('data-open')||t.getAttribute('data-edit')||t.getAttribute('data-back')||t.getAttribute('data-cancelplan')||t.getAttribute('data-import')||t.getAttribute('data-wipe')||t.getAttribute('data-done')||t.getAttribute('data-timer')||t.getAttribute('data-stop')||t.getAttribute('data-add')))){t=t.parentElement}
+ while(t&&t!==document&&!(t.getAttribute&&(t.getAttribute('data-open')||t.getAttribute('data-edit')||t.getAttribute('data-back')||t.getAttribute('data-cancelplan')||t.getAttribute('data-import')||t.getAttribute('data-wipe')||t.getAttribute('data-done')||t.getAttribute('data-timer')||t.getAttribute('data-stop')||t.getAttribute('data-add')||t.getAttribute('data-refresh')))){t=t.parentElement}
  if(!t||t===document||!t.getAttribute)return;
+ if(t.getAttribute('data-refresh')){ev.preventDefault();hardReload();return}
  if(t.getAttribute('data-done')){ev.preventDefault();toggleEx(parseInt(t.getAttribute('data-done'),10));return}
  if(t.getAttribute('data-timer')){ev.preventDefault();startTimer(parseInt(t.getAttribute('data-timer'),10),parseInt(t.getAttribute('data-rest'),10)||60);return}
  if(t.getAttribute('data-stop')){ev.preventDefault();for(var z in timers){stopTimer(parseInt(z,10))}return}
